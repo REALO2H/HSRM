@@ -11,7 +11,7 @@ export default function Home() {
   const [inputText, setInputText] = useState("");
   const [totalMessages, setTotalMessages] = useState(0);
   const [limitCount, setLimitCount] = useState(50); // Initial limit of messages to load
-
+  const [prevScrollHeight, setPrevScrollHeight] = useState(0);
 
   const router = useRouter();
   const scrollContainerRef = useRef<HTMLDivElement>(null); // To "watch" the scrollbar
@@ -104,18 +104,30 @@ const handleScroll = () => {
   const container = scrollContainerRef.current;
   if (!container) return;
 
-  // 1. Check if we are at the top
-  if (container.scrollTop < 50) {
-    
-    // 2. THE GUARD: Only trigger if we haven't loaded everything yet
-    if (limitCount < totalMessages) {
-      console.log(`Loading more... currently showing ${limitCount} of ${totalMessages}`);
-      setLimitCount((prev) => prev + 50);
-    } else {
-      console.log("All messages loaded. Stopping trigger.");
-    }
+  if (container.scrollTop < 50 && limitCount < totalMessages) {
+    // CAPTURE current height before the state updates and more messages arrive
+    setPrevScrollHeight(container.scrollHeight);
+    setLimitCount((prev) => prev + 50);
   }
 };
+
+// 2. Adjust scroll position AFTER messages are added to the top
+useEffect(() => {
+  const container = scrollContainerRef.current;
+  if (container && prevScrollHeight > 0) {
+    // The new scrollTop should be the difference in height
+    container.scrollTop = container.scrollHeight - prevScrollHeight;
+    setPrevScrollHeight(0); // Reset for next trigger
+  }
+}, [messages]); // Runs every time the messages array changes
+
+// Add this effect to scroll to bottom on the VERY FIRST load
+useEffect(() => {
+  const container = scrollContainerRef.current;
+  if (container && messages.length <= 50 && prevScrollHeight === 0) {
+    container.scrollTop = container.scrollHeight;
+  }
+}, [messages.length === 50]); // Only triggers when the first batch arrives
 
 if (!user) {
   return (
