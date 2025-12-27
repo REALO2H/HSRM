@@ -117,8 +117,13 @@ const handleScroll = () => {
   }
 };
 
-  if (!user) return <div className="p-10">Please log in to see the chat.</div>;
-
+if (!user) {
+  return (
+    <div className="flex h-screen items-center justify-center bg-slate-50">
+      <p className="text-slate-500 animate-pulse font-medium">Verifying Session...</p>
+    </div>
+  );
+}
 return (
   <main className="flex flex-col h-screen max-w-2xl mx-auto bg-slate-50 shadow-2xl font-sans">
     {/* Header: Professional Contrast */}
